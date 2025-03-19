@@ -1,2 +1,1 @@
-# Typing-Speed-Master.
-CheetaToise: Typing Speed test
+# Cheetatoise - Typing Speed Test App(Python)
