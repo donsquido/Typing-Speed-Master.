@@ -3,7 +3,7 @@ from pygame.locals import *
 import sys
 import time
 import random
-import pyjokes
+from faker import Faker
 
 class Game:
 
@@ -25,26 +25,56 @@ class Game:
         self.RESULT_C = (255, 70, 70)
 
         pygame.init()
-        self.open_img = pygame.image.load('images/type-speed-open.png')
-        self.open_img = pygame.transform.scale(self.open_img, (self.w, self.h))
+        try:
+            self.open_img = pygame.image.load('Images/type-speed-open.png')
+            self.open_img = pygame.transform.scale(self.open_img, (self.w, self.h))
+        except:
+            self.open_img = pygame.Surface((self.w, self.h))
+            self.open_img.fill((0, 0, 0))
 
-        self.bg = pygame.image.load('images/background.jpg')
-        self.bg = pygame.transform.scale(self.bg, (750, 500))
+        try:
+            self.bg = pygame.image.load('Images/background.jpg')
+            self.bg = pygame.transform.scale(self.bg, (750, 500))
+        except:
+            self.bg = pygame.Surface((750, 500))
+            self.bg.fill((0, 0, 0))
 
         self.screen = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('CheetaToise')
 
     def draw_text(self, screen, msg, y, fsize, color):
         font = pygame.font.Font(None, fsize)
-        text = font.render(msg, 1, color)
-        text_rect = text.get_rect(center=(self.w/2, y))
-        screen.blit(text, text_rect)
+        # Wrap long text to fit on screen
+        words = msg.split()
+        lines = []
+        current_line = []
+        
+        for word in words:
+            current_line.append(word)
+            test_text = ' '.join(current_line)
+            text_render = font.render(test_text, 1, color)
+            if text_render.get_width() > 650:  # Max width for display
+                current_line.pop()
+                lines.append(' '.join(current_line))
+                current_line = [word]
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        # Draw each line
+        for i, line in enumerate(lines[:3]):  # Show max 3 lines
+            text = font.render(line, 1, color)
+            text_rect = text.get_rect(center=(self.w/2, y + i*35))
+            screen.blit(text, text_rect)
+        
         pygame.display.update()
 
     def get_sentence(self):
-        sentence = pyjokes.get_joke()
-        if len(sentence) <= 75:
-            return sentence
+        fake = Faker()
+        # Generate text that fits on screen (100-150 characters for one line)
+        paragraph = fake.text(max_nb_chars=120)
+        # Remove period at end if present
+        return paragraph.rstrip('.')
 
     def show_results(self, screen):
         if(not self.end):
@@ -71,11 +101,12 @@ class Game:
                 round(self.accuracy)) + "%" + '   Wpm: ' + str(round(self.wpm))
 
             # draw icon image
-            self.time_img = pygame.image.load('images/icon.png')
-            self.time_img = pygame.transform.scale(self.time_img, (150, 150))
-
-            #screen.blit(self.time_img, (80,320))
-            screen.blit(self.time_img, (self.w/2-75, self.h-140))
+            try:
+                self.time_img = pygame.image.load('Images/icon.png')
+                self.time_img = pygame.transform.scale(self.time_img, (150, 150))
+                screen.blit(self.time_img, (self.w/2-75, self.h-140))
+            except:
+                pass
             self.draw_text(screen, "Reset", self.h - 70, 26, (100, 100, 100))
 
             print(self.results)
