@@ -39,7 +39,7 @@ class Game:
             self.bg = pygame.Surface((750, 500))
             self.bg.fill((0, 0, 0))
 
-        self.screen = pygame.display.set_mode((self.w, self.h))
+        self.screen = pygame.display.set_mode((self.w, self.h), pygame.FULLSCREEN)
         pygame.display.set_caption('CheetaToise')
 
     def draw_text(self, screen, msg, y, fsize, color):
@@ -68,6 +68,31 @@ class Game:
             screen.blit(text, text_rect)
         
         pygame.display.update()
+
+    def draw_wrapped_input(self, screen, msg, y, fsize, color):
+        """Draw input text with wrapping for multiple lines"""
+        font = pygame.font.Font(None, fsize)
+        words = msg.split()
+        lines = []
+        current_line = []
+        
+        for word in words:
+            current_line.append(word)
+            test_text = ' '.join(current_line)
+            text_render = font.render(test_text, 1, color)
+            if text_render.get_width() > 600:  # Max width for input box
+                current_line.pop()
+                if current_line:
+                    lines.append(' '.join(current_line))
+                current_line = [word]
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        # Draw each line inside input box
+        for i, line in enumerate(lines[:2]):  # Max 2 lines in input box
+            text = font.render(line, 1, color)
+            screen.blit(text, (70, y + i*35))
 
     def get_sentence(self):
         fake = Faker()
@@ -118,11 +143,11 @@ class Game:
         self.running = True
         while(self.running):
             clock = pygame.time.Clock()
-            self.screen.fill((0, 0, 0), (50, 250, 650, 50))
-            pygame.draw.rect(self.screen, self.HEAD_C, (50, 250, 650, 50), 2)
+            self.screen.fill((0, 0, 0), (50, 250, 650, 70))
+            pygame.draw.rect(self.screen, self.HEAD_C, (50, 250, 650, 70), 2)
 
-            # update the text of user input
-            self.draw_text(self.screen, self.input_text, 274, 26, (250, 250, 250))
+            # update the text of user input with wrapping
+            self.draw_wrapped_input(self.screen, self.input_text, 260, 26, (250, 250, 250))
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -130,8 +155,8 @@ class Game:
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
-                    # position of input box
-                    if(x >= 50 and x <= 650 and y >= 250 and y <= 300):
+                    # position of input box (expanded height)
+                    if(x >= 50 and x <= 650 and y >= 250 and y <= 320):
                         self.active = True
                         self.input_text = ''
                         self.time_start = time.time()
